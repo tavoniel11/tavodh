@@ -1,99 +1,124 @@
-import { StatusBar } from 'expo-status-bar';
-import React, { useState, useEffect } from 'react';
-import { StyleSheet,FlatList ,View, Text,TouchableOpacity} from 'react-native';
-import axios from 'axios' //npm i axios
+/**
+ * Sample React Native App
+ * https://github.com/facebook/react-native
+ *
+ * @format
+ * @flow strict-local
+ */
 
-//componentes personalizados
-import ItemLibro from './component/ItemLibro'
-import Input from './component/Input'
-export default function App() {
-  const [listaLibros, setListaLibros] = useState([])
-  const [nombre, setNombre] = useState('')
-  const [edicion, setEdicion] = useState('')
-  const [id, setId] = useState('')
-  const [bandera, setBandera] = useState(false) 
-  useEffect(() => {
-      getLibros()
-    }, [])
-  
-  const getLibros = async() => {
-      const respuesta = await axios.get('http://192.168.0.107/apilibro/')
-      setListaLibros(respuesta.data)
-   }
-   const addLibro = async() => {
-    const obj = {nombre, edicion}
-    const respuesta = await axios.post('http://192.168.0.107/apilibro/', obj)
-    alert(respuesta.data.msg)
-    getLibros()
-    setNombre('')
-    setEdicion('')
-  }
-  const deleteLibro = async (props) => {
-    const id = props.id
-    const respuesta = await axios.delete('http://192.168.0.107/apilibro/?id='+id)
-    alert(respuesta.data.msg)
-    getLibros()
-  }
-  const getLibro = async(props) => {
-    const id = props.id
-    const respuesta = await axios.get('http://192.168.0.107/apilibro/?id='+id)
-    setId(respuesta.data.id)
-    setNombre(respuesta.data.nombre)
-    setEdicion(respuesta.data.edicion)
-    setBandera(!bandera)
-  } 
-  const updateLibro = async() => {
-    const obj = {id, nombre, edicion} 
-    const respuesta = await axios.put('http://192.168.0.107/apilibro/',obj)
-    alert(respuesta.data.msg)
-    setId('') 
-    setNombre('')
-    setEdicion('')
-    setBandera(false)
-    getLibros()
-  } 
-  const addOrUpdate = () => {
-    {bandera? updateLibro() : addLibro() }
-   }
-   
-    const renderItem = ({ item }) => (
-       <ItemLibro id={item.id} getlibro={getLibro}
-          nombre={item.nombre} edicion={item.edicion} mypress={deleteLibro}
-       /> )
-  
+import React from 'react';
+import { StyleSheet, Text, TextInput, View, Button } from 'react-native';
 
-       return (
-        <View style={styles.container}>
-           <View style={{flex:0.1, marginTop:20,marginBottom:25 }} >
-              <Text style={{fontWeight:'bold',color:'#0E69E5', fontSize:20}}>
-                  CRUD REACT NATIVE PHP Y MYSQL
-               </Text>
-           </View> 
-           <Input texto={"Nombre"} valor={nombre} campo={e=>setNombre(e)}/>
-           <Input texto={"Edicion"} valor={edicion} campo={e=>setEdicion(e)}/>
-           <TouchableOpacity 
-                 style={{backgroundColor:'#0E69E5', padding:15,borderRadius:12}}
-                 onPress={addOrUpdate}  >
-               <Text style={{color:'#fff'}}>{bandera? "Editar":"Guardar"}</Text>
-           </TouchableOpacity>
-     
-          <FlatList
-             style={{marginTop:15}}
-             data={listaLibros}
-             renderItem={renderItem}
-             keyExtractor={item =>item.id} 
-           />
-           <StatusBar style="auto" />
-        </View>
-       );
+export default class App extends React.Component {
+  
+  constructor(props){
+    super(props)
+    this.state = {peso: '', altura: '', info: '', resultado: '0.0'}
+    this.calculaIMC = this.calculaIMC.bind(this)
+  }
+  calculaIMC(){
+    let imc = this.state.peso / (this.state.altura * this.state.altura)
+    let s = this.state
+    s.resultado = imc
+    if(s.resultado < 18.5){
+      s.info ='DELGADO'
+    }
+    else if (s.resultado < 24.9){
+     s.info ='NORMAL'
+    }
+    else if (s.resultado < 29.9){
+     s.info ='SOBREPESO'
+    }
+    else if (s.resultado < 39.9) {
+     s.info ='OBESIDAD'
+    }
+    else if (s.resultado > 39.9) {
+     s.info ='OBESIDAD GRAVE'
+    }
+    this.setState(s)
+  }
+
+  clear = () => {
+    this.setState({
+      peso: '',
+      altura: '',
+      resultado: '0.0',
+      info: ''
+    })
+  }
+
+  render() {
+    return (
+      <View style={styles.viewContainer}>
+        <Text style={styles.text}> Altura (m)</Text>
+        <TextInput
+          style={styles.textInput}
+          onChangeText={altura => this.setState({ altura })}
+          value={this.state.altura}
+          placeholder='Ejemplo: 1.60'
+          keyboardType={'numeric'}
+        />
+        <Text style={styles.text}> Peso (kg)</Text>
+        <TextInput
+          style={styles.textInput}
+          onChangeText={peso => this.setState({ peso })}
+          value={this.state.peso}
+          placeholder='Ejemplo: 61.0'
+          keyboardType={'numeric'}
+        />
+        <Separator />
+        <Button
+          onPress={this.calculaIMC}
+          title='Calcular'
+          color='green'
+          accessibilityLabel='Calcular IMC'
+        />
+        <Separator />
+        <Button
+          onPress={this.clear}
+          title='Limpiar'
+          color='red'
+          accessibilityLabel='limpiar los valores'
+        />
+        <Separator />
+        <Text style={styles.input}>
+         IMC: {this.state.resultado}
+        </Text>
+        <Text style={styles.input}>
+         Estado: {this.state.info}
+        </Text>
+      </View>
+    );
+  }
 }
-     
-     const styles = StyleSheet.create({
-       container: {
-         flex: 1,
-         backgroundColor: '#fff',
-         alignItems: 'center',
-         justifyContent: 'center',
-       },
-     });
-     
+const Separator = () => (
+  <View style={styles.separator} />
+);
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  input: {
+    paddingLeft: 5,
+    paddingRight: 5,
+    paddingBottom: 5,
+    fontSize: 30,
+  },
+  separator: {
+    marginVertical: 8,
+    borderBottomColor: '#737373',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  textInput: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: 'gray',
+    paddingLeft: 20,
+    margin: 10,
+    borderRadius: 20
+  }
+});
